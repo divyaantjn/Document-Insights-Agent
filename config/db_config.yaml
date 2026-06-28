@@ -1,0 +1,279 @@
+# Database Configuration File
+# This file defines the complete database structure, credentials, and schema
+
+# Database Connection Configuration
+# Use environment variables for sensitive credentials
+database:
+  connection:
+    host: ${NER_DB_HOST:localhost}  # Default to 'localhost' if DB_HOST not set
+    port: ${NER_DB_PORT:5432}
+    database: ${NER_DB_NAME:ner_database}
+    username: ${NER_DB_USER:postgres}
+    password: ${NER_DB_PASSWORD:password}
+    pool_size: 10
+    connect_timeout: 30
+
+# Schema Configuration
+schema:
+  # Main tables definition
+  tables:
+    # Documents table configuration
+    documents:
+      primary_key: id
+      columns:
+        id:
+          type: UUID
+          constraints: 
+            - PRIMARY KEY
+            - DEFAULT gen_random_uuid()
+        user_email:
+          type: VARCHAR(255)
+          constraints:
+            - NOT NULL
+        filename:
+          type: VARCHAR(500)
+          constraints:
+            - NOT NULL
+        file_url:
+          type: TEXT
+          constraints: []
+        file_type:
+          type: VARCHAR(50)
+          constraints: []
+        file_size:
+          type: BIGINT
+          constraints: []
+        content_preview:
+          type: TEXT
+          constraints: []
+        processing_status:
+          type: VARCHAR(50)
+          constraints:
+            - DEFAULT 'pending'
+        upload_timestamp:
+          type: TIMESTAMP WITH TIME ZONE
+          constraints:
+            - DEFAULT CURRENT_TIMESTAMP
+        processing_timestamp:
+          type: TIMESTAMP WITH TIME ZONE
+          constraints: []
+        total_entities_extracted:
+          type: INTEGER
+          constraints:
+            - DEFAULT 0
+        extraction_metadata:
+          type: JSONB
+          constraints: []
+        created_at:
+          type: TIMESTAMP WITH TIME ZONE
+          constraints:
+            - DEFAULT CURRENT_TIMESTAMP
+        updated_at:
+          type: TIMESTAMP WITH TIME ZONE
+          constraints:
+            - DEFAULT CURRENT_TIMESTAMP
+      
+      # Indexes for this table
+      indexes:
+        - name: idx_documents_user_email
+          columns: [user_email]
+          type: btree
+        - name: idx_documents_processing_status
+          columns: [processing_status]
+          type: btree
+        - name: idx_documents_upload_timestamp
+          columns: [upload_timestamp]
+          type: btree
+    
+    # Entities table configuration
+    entities:
+      primary_key: id
+      columns:
+        id:
+          type: UUID
+          constraints:
+            - PRIMARY KEY
+            - DEFAULT gen_random_uuid()
+        document_id:
+          type: UUID
+          constraints:
+            - NOT NULL
+            - REFERENCES documents(id) ON DELETE CASCADE
+        user_email:
+          type: VARCHAR(255)
+          constraints:
+            - NOT NULL
+        
+        # Entity type columns
+        persons:
+          type: TEXT
+          constraints: []
+        organizations:
+          type: TEXT
+          constraints: []
+        locations:
+          type: TEXT
+          constraints: []
+        dates:
+          type: TEXT
+          constraints: []
+        money:
+          type: TEXT
+          constraints: []
+        phones:
+          type: TEXT
+          constraints: []
+        emails:
+          type: TEXT
+          constraints: []
+        ssn:
+          type: TEXT
+          constraints: []
+        credit_cards:
+          type: TEXT
+          constraints: []
+        addresses:
+          type: TEXT
+          constraints: []
+        
+        # Confidence score columns
+        persons_confidence:
+          type: JSONB
+          constraints: []
+        organizations_confidence:
+          type: JSONB
+          constraints: []
+        locations_confidence:
+          type: JSONB
+          constraints: []
+        dates_confidence:
+          type: JSONB
+          constraints: []
+        money_confidence:
+          type: JSONB
+          constraints: []
+        phones_confidence:
+          type: JSONB
+          constraints: []
+        emails_confidence:
+          type: JSONB
+          constraints: []
+        ssn_confidence:
+          type: JSONB
+          constraints: []
+        credit_cards_confidence:
+          type: JSONB
+          constraints: []
+        addresses_confidence:
+          type: JSONB
+          constraints: []
+        
+        # Metadata columns
+        extraction_timestamp:
+          type: TIMESTAMP WITH TIME ZONE
+          constraints:
+            - DEFAULT CURRENT_TIMESTAMP
+        extraction_model:
+          type: VARCHAR(100)
+          constraints: []
+        min_confidence_threshold:
+          type: DECIMAL(3,2)
+          constraints: []
+        total_entities_count:
+          type: INTEGER
+          constraints:
+            - DEFAULT 0
+        extraction_duration_ms:
+          type: INTEGER
+          constraints: []
+        created_at:
+          type: TIMESTAMP WITH TIME ZONE
+          constraints:
+            - DEFAULT CURRENT_TIMESTAMP
+        updated_at:
+          type: TIMESTAMP WITH TIME ZONE
+          constraints:
+            - DEFAULT CURRENT_TIMESTAMP
+      
+      # Indexes for this table
+      indexes:
+        - name: idx_entities_document_id
+          columns: [document_id]
+          type: btree
+        - name: idx_entities_user_email
+          columns: [user_email]
+          type: btree
+        - name: idx_entities_extraction_timestamp
+          columns: [extraction_timestamp]
+          type: btree
+        - name: idx_entities_persons_fulltext
+          columns: [persons]
+          type: gin
+          expression: "to_tsvector('english', COALESCE(persons, ''))"
+        - name: idx_entities_organizations_fulltext
+          columns: [organizations]
+          type: gin
+          expression: "to_tsvector('english', COALESCE(organizations, ''))"
+        - name: idx_entities_locations_fulltext
+          columns: [locations]
+          type: gin
+          expression: "to_tsvector('english', COALESCE(locations, ''))"
+
+# Entity mapping configuration for NER results
+entity_mapping:
+  PERSON:
+    text_column: persons
+    confidence_column: persons_confidence
+  ORGANIZATION:
+    text_column: organizations
+    confidence_column: organizations_confidence
+  LOCATION:
+    text_column: locations
+    confidence_column: locations_confidence
+  DATE:
+    text_column: dates
+    confidence_column: dates_confidence
+  MONEY:
+    text_column: money
+    confidence_column: money_confidence
+  PHONE:
+    text_column: phones
+    confidence_column: phones_confidence
+  EMAIL:
+    text_column: emails
+    confidence_column: emails_confidence
+  SSN:
+    text_column: ssn
+    confidence_column: ssn_confidence
+  CREDIT_CARD:
+    text_column: credit_cards
+    confidence_column: credit_cards_confidence
+  ADDRESS:
+    text_column: addresses
+    confidence_column: addresses_confidence
+
+# Default values for entity extraction
+extraction_defaults:
+  model: "gemini/gemini-2.5-flash-lite"
+  min_confidence_threshold: 0.5
+  pending_status: "pending"
+  completed_status: "completed"
+  failed_status: "failed"
+
+# Query configurations
+queries:
+  pagination:
+    default_limit: 50
+    max_limit: 1000
+    default_offset: 0
+  
+  search:
+    default_entity_types:
+      - persons
+      - organizations
+      - locations
+      - dates
+      - money
+      - phones
+      - emails
+      - addresses

@@ -1,0 +1,245 @@
+ner_config:
+  extraction_prompt: |
+    You are an expert Named Entity Recognition (NER) system specialized in invoice and financial document processing. Your task is to extract specific entities from invoice documents with high accuracy and provide confidence scores.
+
+    **Instructions:**
+    1. Extract entities based on the provided entity types and their descriptions
+    2. For each entity found, provide:
+       - entity_text: The exact text span of the entity (as it appears in the document)
+       - entity_type: The type of entity (from the provided list)
+       - confidence_score: A confidence score between 0.0 and 1.0 indicating how confident you are about this entity
+    3. Only extract entities that you are reasonably confident about (confidence >= 0.5)
+    4. Do not include start/end positions, only the entity text
+    5. If no entities are found for a type, return an empty list for that type
+    6. For invoices, pay special attention to structured data like amounts, dates, invoice numbers, and vendor information
+    7. Preserve original formatting for numbers (with currency symbols, commas, decimals)
+
+    **Entity Types and Descriptions:**
+    {entity_descriptions}
+
+    **Invoice Content:**
+    {content}
+
+    **Expected Output Format:**
+    {{
+      "extracted_entities": {{
+        "entity_type_1": [
+          {{
+            "entity_text": "extracted text",
+            "entity_type": "entity_type_1",
+            "confidence_score": 0.95
+          }}
+        ],
+        "entity_type_2": [
+          {{
+            "entity_text": "another extracted text",
+            "entity_type": "entity_type_2", 
+            "confidence_score": 0.87
+          }}
+        ]
+      }},
+      "total_entities_found": 2,
+      "processing_status": "success"
+    }}
+    
+    Extract the entities now. Focus on accuracy and completeness for invoice-specific information:
+
+  entity_definitions:
+    # Invoice-specific entities
+    INVOICE_NUMBER:
+      description: "Unique invoice identifier, reference number, or bill number (e.g., INV-2024-001, #12345, Invoice No: 98765)"
+      examples: ["INV-2024-001", "#12345", "Invoice No: 98765", "Bill #: ABC-123"]
+    
+    VENDOR_NAME:
+      description: "Name of the company or individual issuing the invoice (supplier, seller, service provider)"
+      examples: ["ABC Corporation", "Smith & Associates LLC", "Tech Solutions Inc."]
+    
+    CUSTOMER_NAME:
+      description: "Name of the customer, client, or buyer receiving the invoice"
+      examples: ["John Enterprises", "XYZ Corp", "Jane Doe"]
+    
+    TOTAL_AMOUNT:
+      description: "Total invoice amount including all charges, taxes, and fees (final amount due)"
+      examples: ["$1,234.56", "€500.00", "Total: USD 10,000.00", "Grand Total: ₹25,000"]
+    
+    SUBTOTAL:
+      description: "Subtotal amount before taxes and additional fees"
+      examples: ["Subtotal: $1,000.00", "Sub-Total: €450.00", "$950.00"]
+    
+    TAX_AMOUNT:
+      description: "Tax amount charged (VAT, GST, sales tax, etc.)"
+      examples: ["Tax: $50.00", "VAT (10%): €45.00", "GST: ₹2,500", "Sales Tax: $75.00"]
+    
+    INVOICE_DATE:
+      description: "Date when the invoice was issued or created"
+      examples: ["January 15, 2024", "01/15/2024", "15-Jan-2024", "2024-01-15"]
+    
+    DUE_DATE:
+      description: "Payment due date or deadline for payment"
+      examples: ["Due: February 15, 2024", "Payment Due: 02/15/2024", "Net 30: 2024-02-14"]
+    
+    PAYMENT_TERMS:
+      description: "Payment terms and conditions (e.g., Net 30, Due on Receipt, 2/10 Net 30)"
+      examples: ["Net 30", "Due on Receipt", "2/10 Net 30", "Payment within 15 days"]
+    
+    VENDOR_ADDRESS:
+      description: "Complete physical address of the vendor/supplier"
+      examples: ["123 Business St, Suite 100, New York, NY 10001", "456 Commerce Ave, London, UK"]
+    
+    CUSTOMER_ADDRESS:
+      description: "Complete billing or shipping address of the customer"
+      examples: ["789 Client Road, Chicago, IL 60601", "321 Buyer Blvd, Toronto, ON M5H 2N2"]
+    
+    VENDOR_EMAIL:
+      description: "Email address of the vendor or supplier"
+      examples: ["billing@vendor.com", "accounts@supplier.com", "invoice@company.com"]
+    
+    CUSTOMER_EMAIL:
+      description: "Email address of the customer or buyer"
+      examples: ["customer@client.com", "buyer@company.com", "accounts.payable@corp.com"]
+    
+    VENDOR_PHONE:
+      description: "Phone number of the vendor or supplier"
+      examples: ["+1-555-123-4567", "(555) 987-6543", "+44 20 1234 5678"]
+    
+    PURCHASE_ORDER:
+      description: "Purchase Order (PO) number or reference"
+      examples: ["PO-2024-001", "Purchase Order: 12345", "PO#: ABC-456"]
+    
+    ITEM_DESCRIPTION:
+      description: "Description of products, services, or line items on the invoice"
+      examples: ["Consulting Services - January 2024", "Widget Model X (Qty: 10)", "Software License"]
+    
+    QUANTITY:
+      description: "Quantity or amount of items/services"
+      examples: ["Qty: 10", "5 units", "Quantity: 100", "20 hours"]
+    
+    UNIT_PRICE:
+      description: "Price per unit or rate for individual items/services"
+      examples: ["$50.00 per unit", "Unit Price: €25.00", "$100/hr"]
+    
+    LINE_TOTAL:
+      description: "Total amount for individual line items (quantity × unit price)"
+      examples: ["Line Total: $500.00", "$250.00", "Amount: €1,000.00"]
+    
+    DISCOUNT:
+      description: "Discount amount or percentage applied"
+      examples: ["Discount: 10%", "Less: $50.00", "Discount Applied: $100.00", "5% off"]
+    
+    SHIPPING_COST:
+      description: "Shipping, freight, or delivery charges"
+      examples: ["Shipping: $25.00", "Delivery Fee: €15.00", "Freight: $100.00"]
+    
+    CURRENCY:
+      description: "Currency code or symbol used in the invoice"
+      examples: ["USD", "EUR", "GBP", "$", "€", "£", "INR", "₹"]
+    
+    PAYMENT_METHOD:
+      description: "Accepted or requested payment methods"
+      examples: ["Payment via Bank Transfer", "Credit Card", "Check", "Wire Transfer", "PayPal"]
+    
+    BANK_ACCOUNT:
+      description: "Bank account details for payment (account number, IBAN, routing number)"
+      examples: ["Account: 123456789", "IBAN: GB29 NWBK 6016 1331 9268 19", "Routing: 021000021"]
+    
+    TAX_ID:
+      description: "Tax identification numbers (VAT number, EIN, GST number, TIN)"
+      examples: ["VAT: GB123456789", "EIN: 12-3456789", "GST: 27AABCU9603R1ZM", "Tax ID: 98-7654321"]
+    
+    NOTES:
+      description: "Additional notes, terms, conditions, or comments on the invoice"
+      examples: ["Payment terms: Net 30 days", "Thank you for your business", "Late fee applies after due date"]
+    
+    # Standard entities that may appear
+    PERSON:
+      description: "Names of individuals including contact persons, authorized signatories"
+      examples: ["John Smith", "Jane Doe", "Contact: Bob Johnson"]
+    
+    ORGANIZATION:
+      description: "Names of companies, institutions, or business entities mentioned in invoice"
+      examples: ["Microsoft Corporation", "ABC Suppliers Ltd.", "Global Services Inc."]
+    
+    LOCATION:
+      description: "Geographic locations, cities, states, countries mentioned"
+      examples: ["New York", "London", "California", "United Kingdom"]
+    
+    DATE:
+      description: "Any other dates mentioned (delivery date, order date, contract date)"
+      examples: ["Order Date: January 10, 2024", "Delivered: 2024-01-12", "Contract: 12/01/2023"]
+    
+    MONEY:
+      description: "Any other monetary amounts not classified in specific categories above"
+      examples: ["$1,000", "€500", "Balance Due: USD 250.00"]
+    
+    PHONE:
+      description: "Any other phone numbers (customer service, general contact)"
+      examples: ["+1-800-123-4567", "(555) 555-5555"]
+    
+    EMAIL:
+      description: "Any other email addresses (support, general inquiries)"
+      examples: ["support@company.com", "info@business.com"]
+    
+    WEBSITE:
+      description: "Website URLs or domain names"
+      examples: ["www.company.com", "https://business.com", "vendor.com"]
+
+  default_entities:
+    # Invoice-specific entities (highest priority)
+    - "INVOICE_NUMBER"
+    - "VENDOR_NAME"
+    - "CUSTOMER_NAME"
+    - "TOTAL_AMOUNT"
+    - "SUBTOTAL"
+    - "TAX_AMOUNT"
+    - "INVOICE_DATE"
+    - "DUE_DATE"
+    - "PAYMENT_TERMS"
+    - "VENDOR_ADDRESS"
+    - "CUSTOMER_ADDRESS"
+    - "VENDOR_EMAIL"
+    - "CUSTOMER_EMAIL"
+    - "VENDOR_PHONE"
+    - "PURCHASE_ORDER"
+    - "ITEM_DESCRIPTION"
+    - "QUANTITY"
+    - "UNIT_PRICE"
+    - "LINE_TOTAL"
+    - "DISCOUNT"
+    - "SHIPPING_COST"
+    - "CURRENCY"
+    - "PAYMENT_METHOD"
+    - "BANK_ACCOUNT"
+    - "TAX_ID"
+    - "NOTES"
+    # Standard entities
+    - "PERSON"
+    - "ORGANIZATION"
+    - "LOCATION"
+    - "DATE"
+    - "MONEY"
+    - "PHONE"
+    - "EMAIL"
+    - "WEBSITE"
+
+  # Processing configuration
+  processing:
+    min_confidence_threshold: 0.5
+    max_retries: 3
+    timeout_seconds: 120
+    batch_size: 10
+    
+  # Invoice-specific validation rules
+  validation:
+    require_invoice_number: true
+    require_total_amount: true
+    require_vendor_info: true
+    validate_date_formats: true
+    validate_currency_formats: true
+    
+  # Post-processing rules for invoices
+  post_processing:
+    normalize_dates: true
+    normalize_currency: true
+    extract_numeric_values: true
+    validate_totals: true
+    deduplicate_entities: true

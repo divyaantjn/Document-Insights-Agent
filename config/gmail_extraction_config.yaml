@@ -1,0 +1,90 @@
+# Gmail OAuth Integration Configuration
+
+# Database Configuration
+database:
+  host: ${DB_HOST}
+  port: ${DB_PORT}
+  name: ${DB_NAME}
+  user: ${DB_USER}
+  password: ${DB_PASSWORD}
+  pool:
+    min_connections: 2
+    max_connections: 10
+
+# Google OAuth Configuration
+oauth:
+  google:
+    client_id: ${GOOGLE_CLIENT_ID}
+    client_secret: ${GOOGLE_CLIENT_SECRET}
+    redirect_uri: http://localhost:8000/auth/google/callback
+    scopes:
+      - https://www.googleapis.com/auth/gmail.modify
+    auth_uri: https://accounts.google.com/o/oauth2/auth
+    token_uri: https://oauth2.googleapis.com/token
+
+# Gmail OAuth Manager Configuration
+gmail_manager:
+  cache_ttl_minutes: 30
+  rate_limit_calls_per_second: 5
+
+# FastAPI Application Configuration
+app:
+  title: Gmail OAuth Integration with MCP Features
+  description: Complete Gmail OAuth with all MCP features integrated
+  version: "2.0.0"
+  host: "0.0.0.0"
+  port: 8000
+  log_level: info
+
+# S3 Configuration (for attachment uploads)
+s3:
+  bucket_name: ${S3_BUCKET_NAME}
+  region: ${S3_REGION}
+  access_key: ${S3_ACCESS_KEY}
+  secret_key: ${S3_SECRET_KEY}
+
+# Email Templates and Prompts
+email_templates:
+  default_welcome_subject: "Welcome to Gmail OAuth Integration"
+  default_welcome_body: "Your Gmail account has been successfully connected."
+  
+prompts:
+  authentication_required: "User authentication is required. Please authenticate with Google first."
+  email_not_found: "Email not found for user {user_email}"
+  operation_success: "Operation completed successfully"
+  operation_error: "An error occurred during operation: {error_message}"
+
+# Feature Flags
+features:
+  enable_s3_uploads: true
+  enable_rate_limiting: true
+  enable_caching: true
+  enable_async_operations: true
+
+# Logging Configuration
+logging:
+  level: INFO
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: /tmp/gmail_oauth.log
+  max_file_size: 10485760  # 10MB
+  backup_count: 5
+
+# Default Query Parameters
+defaults:
+  max_emails_per_request: 10
+  max_search_results: 50
+  max_batch_archive: 100
+  email_snippet_length: 100
+
+# Cache Configuration
+cache:
+  ttl_minutes: 30
+  max_size: 1000
+  type: memory  # Can be 'memory' or 'redis'
+
+# Redis Configuration (if cache type is redis)
+redis:
+  host: localhost
+  port: 6379
+  db: 0
+  password: null

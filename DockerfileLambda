@@ -1,0 +1,41 @@
+#
+FROM public.ecr.aws/lambda/python:3.12
+
+WORKDIR ${LAMBDA_TASK_ROOT}
+
+# Install system dependencies needed for PyMuPDF and PDF/Office processing
+RUN dnf install -y \
+    gcc \
+    gcc-c++ \
+    make \
+    libffi-devel \
+    && dnf clean all
+
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+# Copy dependency files first (for better caching)
+COPY pyproject.toml ./
+
+# We explicitly install key dependencies and OTel instrumentation to ensure they are picked up
+# correctly. Excluding uv.lock from COPY ensures uv resolves fresh from pyproject.toml.
+RUN uv pip install --system --no-cache-dir . \
+    "PyJWT[crypto]>=2.8.0" \
+    "mangum>=0.19.0" \
+    "opentelemetry-api>=1.20.0" \
+    "opentelemetry-sdk>=1.20.0" \
+    "opentelemetry-exporter-otlp-proto-http>=1.20.0" \
+    "opentelemetry-instrumentation-fastapi>=0.41b0"
+
+# Pre-create a writable directory inside /tmp
+RUN mkdir -p /tmp/idp_data
+
+# Ensure writable home directory
+ENV HOME=/tmp
+ENV IDP_STORAGE_PATH=/tmp/idp_data
+ENV LOG_FILE_PATH=/tmp/app.log
+
+# Copy application code
+COPY . .
+
+CMD ["lambda_function.handler"]

@@ -1,0 +1,184 @@
+# Hybrid Search Chatbot Configuration
+# Configuration for combining Milvus vector search and PostgreSQL entity search
+
+# Search Configuration
+search:
+  # Enable/disable individual search components
+  enable_vector_search: true
+  enable_entity_search: true
+  
+  # Vector search settings
+  vector_search_top_k: 5
+  vector_similarity_threshold: 0.7
+  
+  # Entity search settings
+  entity_search_max_results: 10
+
+# Conversation History Configuration
+conversation:
+  # Number of previous conversation turns to maintain in context
+  # Each turn consists of 1 user message and 1 assistant response
+  history_limit: 3
+  
+  # Maximum character length for search context to prevent token overflow
+  max_context_length: 4000
+  
+  # Auto-save conversation setting
+  auto_save: true
+  
+  # Conversation cleanup settings
+  max_conversation_age_days: 90
+  auto_cleanup_enabled: false
+
+# LLM Configuration
+llm:
+  # Model selection (supports any litellm-compatible model)
+  model: "gpt-4o-mini"
+  
+  # Temperature for response generation (0.0 - 1.0)
+  # Lower = more focused, Higher = more creative
+  temperature: 0.7
+  
+  # Maximum tokens in response
+  max_tokens: 1000
+  
+  # Top-p sampling parameter
+  top_p: 1.0
+  
+  # Presence penalty (-2.0 to 2.0)
+  presence_penalty: 0.0
+  
+  # Frequency penalty (-2.0 to 2.0)
+  frequency_penalty: 0.0
+
+# Prompts Configuration
+prompts:
+  # System prompt that defines the assistant's behavior
+  system_prompt: |
+    You are an intelligent hybrid search assistant that helps users find information from two sources:
+    1. **Vector Search**: Semantic search through document content
+    2. **Entity Search**: Structured search through extracted entities (persons, organizations, locations, dates, etc.)
+    
+    Your role is to:
+    - Analyze search results from both sources
+    - Synthesize information into coherent, helpful responses
+    - Maintain conversation context (up to {max_history} previous turns)
+    - Provide accurate, well-structured answers
+    - Cite sources when referencing specific information
+    - Be concise yet comprehensive
+    
+    When both search results are available, combine insights from both sources.
+    If one source has no results, acknowledge this and focus on available information.
+    Always prioritize accuracy and clarity in your responses.
+  
+  # User prompt template for each query
+  user_prompt: |
+    User Query: {user_query}
+    
+    Search Results Context:
+    {search_context}
+    
+    Based on the above search results and our conversation history, please provide a comprehensive, 
+    accurate answer to the user's query. 
+    
+    Guidelines:
+    - Synthesize information from both vector search (documents) and entity search (structured data)
+    - If both sources provide relevant information, combine them naturally
+    - If only one source has results, work with what's available
+    - Cite specific sources when referencing particular information
+    - Be professional, clear, and helpful
+    - If no relevant information is found, say so clearly and suggest alternatives
+
+# Response Formatting Configuration
+response:
+  # Include search metadata in response
+  include_metadata: true
+  
+  # Format options
+  format:
+    use_markdown: true
+    include_sources: true
+    max_source_length: 200
+    
+  # Citation style
+  citation:
+    enabled: true
+    format: "numbered"  # Options: numbered, inline, footnote
+
+# Error Handling Configuration
+error_handling:
+  # Fallback behavior when LLM fails
+  use_fallback_response: true
+  
+  # Retry settings
+  max_retries: 2
+  retry_delay_seconds: 1
+  
+  # Error messages
+  messages:
+    no_results: "I couldn't find any relevant information for your query."
+    search_failed: "I encountered an error while searching. Please try again."
+    llm_failed: "I had trouble generating a response. Here's what I found:"
+
+# Performance Settings
+performance:
+  # Parallel search execution
+  parallel_search: true
+  
+  # Search timeout in seconds
+  search_timeout: 30
+  
+  # LLM request timeout in seconds
+  llm_timeout: 60
+  
+  # Cache settings
+  enable_caching: false
+  cache_ttl_seconds: 3600
+
+# Logging Configuration
+logging:
+  # Log level: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  level: "INFO"
+  
+  # Log search queries and results
+  log_searches: true
+  
+  # Log LLM interactions
+  log_llm_calls: true
+  
+  # Log conversation history operations
+  log_conversations: true
+  
+  # Include sensitive data in logs (disable in production)
+  include_sensitive_data: false
+
+# Security Settings
+security:
+  # Validate user email format
+  validate_email: true
+  
+  # Maximum query length to prevent abuse
+  max_query_length: 1000
+  
+  # Rate limiting (if implemented)
+  rate_limit:
+    enabled: false
+    max_requests_per_minute: 60
+    max_requests_per_hour: 1000
+
+# Feature Flags
+features:
+  # Enable conversation context
+  conversation_context: true
+  
+  # Enable search result ranking
+  result_ranking: true
+  
+  # Enable query suggestions
+  query_suggestions: false
+  
+  # Enable conversation summaries
+  conversation_summaries: false
+  
+  # Enable export functionality
+  export_conversations: true

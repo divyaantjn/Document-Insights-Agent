@@ -1,0 +1,53 @@
+# Outlook Email Extractor Configuration File
+# Use ${ENV_VAR_NAME} syntax to reference environment variables
+
+# Microsoft Graph API Configuration
+microsoft_graph:
+  client_id: ${CLIENT_ID}
+  client_secret: ${CLIENT_SECRET}
+  tenant_id: ${TENANT_ID}
+  authority_url: "https://login.microsoftonline.com"
+  graph_api_endpoint: "https://graph.microsoft.com/v1.0"
+  scopes:
+    - "https://graph.microsoft.com/.default"
+
+# Email Configuration
+email:
+  default_folder: "inbox"
+  default_limit: 50
+  folders:
+    inbox: "inbox"
+    sent: "sentitems"
+    drafts: "drafts"
+    deleted: "deleteditems"
+    junk: "junkemail"
+    archive: "archive"
+
+# Upload Configuration
+upload:
+  chunk_size: 4915200  # 15 x 320 KiB for large file uploads
+  small_attachment_threshold: 3145728  # 3MB in bytes
+
+# API Configuration
+api:
+  max_retries: 3
+  timeout: 30.0
+  rate_limit_wait: 60
+  exponential_backoff_base: 2
+
+# Logging Configuration
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file_path: "logs/outlook_extractor.log"  # Set to null to disable file logging
+  console_output: true
+  max_bytes: 10485760  # 10MB
+  backup_count: 5
+
+# S3 Configuration (Optional - only if using S3 integration)
+s3:
+  enabled: false
+  bucket_name: ${S3_BUCKET_NAME}
+  region: ${AWS_REGION}
+  access_key: ${AWS_ACCESS_KEY_ID}
+  secret_key: ${AWS_SECRET_ACCESS_KEY}

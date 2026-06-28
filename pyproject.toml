@@ -1,0 +1,57 @@
+[project]
+name = "yash-unified-idp"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12,<4.0.0"
+dependencies = [
+    "asyncpg>=0.30.0",
+    "boto3>=1.40.70",
+    "dotenv>=0.9.9",
+    "fastapi>=0.121.1",
+    "google-genai>=1.49.0",
+    "langchain-text-splitters>=1.0.0",
+    "litellm==1.80.11",
+    "openpyxl>=3.1.5",
+    "pandas>=2.3.3",
+    "psycopg2-binary>=2.9.11",
+    "pgvector>=0.3.0",
+    "redis>=5.0.0",
+    "pymilvus>=2.6.3",
+    "python-docx>=1.2.0",
+    "python-pptx>=1.0.2",
+    "uvicorn>=0.38.0",
+    "kafka-python-ng",
+    "python-dotenv>=1.2.1",
+    "pydantic[email]>=2.12.4",
+    "langchain-experimental>=0.4.1",
+    "langchain==1.2.13",
+    "langchain-core>=1.2.13",
+    "mangum>=0.19.0",
+    "cryptography==46.0.3",
+    "starlette==0.50.0",
+    "PyJWT[crypto]>=2.8.0",
+    "httpx>=0.27.0",
+    # OpenTelemetry tracing dependencies
+    "opentelemetry-api>=1.20.0",
+    "opentelemetry-sdk>=1.20.0",
+    "opentelemetry-exporter-otlp-proto-http>=1.20.0",
+    "opentelemetry-instrumentation-fastapi>=0.41b0",
+    "opentelemetry-instrumentation-httpx>=0.41b0",
+    "opentelemetry-instrumentation-requests>=0.41b0",
+    # Optional: X-Ray SDK for AWS Lambda tracing annotations
+    "aws-xray-sdk>=2.12.0",
+    "opik==1.10.22",
+    "pdfplumber>=0.11.9",
+    "pillow>=12.0.0",
+    "pytest-timeout>=2.4.0",
+    "pytest-asyncio>=1.3.0",
+    "aiofiles>=25.1.0",
+    "redis>=5.0.0",
+    "google-auth==2.49.2",
+    "pypdf==6.10.2",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+timeout = 30

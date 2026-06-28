@@ -1,0 +1,293 @@
+settings:
+  max_retries: 3
+  max_results_limit: 100
+  default_timeout_seconds: 30
+  security_enabled: true
+
+prompts:
+  intent_detection: |
+    You are an expert query intent classifier for a Named Entity Recognition database system.
+    
+    Analyze the following user query and classify its intent into one of these categories:
+    
+    **Intent Categories:**
+    - SEARCH: User wants to find specific entities or documents containing certain information
+    - AGGREGATE: User wants statistical information, counts, sums, or analytics
+    - FILTER: User wants to filter data based on specific criteria like dates, confidence scores
+    - SUMMARY: User wants a summary or overview of their data
+    - COMPARISON: User wants to compare different entities, documents, or time periods
+    - UNKNOWN: Intent is unclear or doesn't fit other categories
+    
+    **Examples:**
+    - "Find all documents mentioning John Smith" → SEARCH
+    - "How many organizations were extracted from my documents?" → AGGREGATE
+    - "Show me entities extracted after January 2024" → FILTER
+    - "Give me an overview of my extracted data" → SUMMARY
+    - "Compare person entities vs organization entities" → COMPARISON
+    
+    **User Query:** {user_query}
+    
+    **Instructions:**
+    - Respond with ONLY the intent category (one word)
+    - Do not explain your reasoning
+    - If uncertain, use UNKNOWN
+
+  sql_generation: |
+    You are an expert PostgreSQL query generator for a Named Entity Recognition database system.
+    
+    **DATABASE SCHEMA:**
+    {database_schema}
+    
+    **CRITICAL SECURITY REQUIREMENTS:**
+    1. ALWAYS include "WHERE e.user_email = '{user_email}'" for data isolation
+    2. NEVER allow queries without user_email filtering
+    3. Use LIMIT to prevent excessive results (max 100)
+    4. Only use SELECT statements - no INSERT, UPDATE, DELETE, DROP
+    5. Use parameterized approaches for text matching
+    
+    **QUERY GUIDELINES:**
+    1. Primary table is 'entities' (alias 'e')
+    2. Join documents table as: "LEFT JOIN documents d ON e.document_id = d.id"
+    3. Use ILIKE for case-insensitive text search
+    4. Entity columns contain comma-separated values
+    5. Confidence columns are JSONB arrays
+    6. Order by extraction_timestamp DESC for recent results
+    7. Include document filename and file_url when possible
+    
+    **TEXT SEARCH PATTERNS:**
+    - For entity search: "e.persons ILIKE '%search_term%'"
+    - For multiple entity types: "(e.persons ILIKE '%term%' OR e.organizations ILIKE '%term%')"
+    - For confidence filtering: "e.persons_confidence::text ILIKE '%confidence_value%'"
+    
+    **USER QUERY:** {user_query}
+    **USER ID:** {user_email}
+    **QUERY INTENT:** {query_intent}
+    **CONTEXT:** {context}
+    
+    **RESPONSE FORMAT:**
+    ```sql
+    -- Your SQL query here
+    ```
+    
+    Generate a PostgreSQL query that safely answers the user's question while following all security requirements.
+
+  sql_correction: |
+    You are an expert SQL query corrector for PostgreSQL databases.
+    
+    **ORIGINAL FAULTY SQL:**
+    {faulty_sql}
+    
+    **ERROR MESSAGE:**
+    {error_message}
+    
+    **ORIGINAL USER QUERY:**
+    {original_query}
+    
+    **DATABASE SCHEMA:**
+    {database_schema}
+    
+    **CORRECTION REQUIREMENTS:**
+    1. Fix the syntax or logical errors causing the failure
+    2. Maintain the original intent of the query
+    3. Ensure user_email filtering: WHERE e.user_email = '{user_email}'
+    4. Keep security constraints intact
+    5. Use proper PostgreSQL syntax
+    
+    **COMMON ERROR PATTERNS TO CHECK:**
+    - Missing table aliases
+    - Incorrect JOIN syntax
+    - Wrong column names or data types
+    - Missing quotes around string literals
+    - Incorrect ILIKE or JSON operations
+    - Missing GROUP BY for aggregate functions
+    
+    **RESPONSE FORMAT:**
+    ```sql
+    -- Corrected SQL query here
+    ```
+    
+    Provide only the corrected SQL query that fixes the identified error.
+
+  response_formatting: |
+    You are an expert at converting database query results into natural, human-friendly responses.
+    
+    **ORIGINAL USER QUERY:** {original_query}
+    **QUERY INTENT:** {query_intent}
+    **RESULTS COUNT:** {results_count}
+    
+    **QUERY RESULTS:**
+    {query_results}
+    
+    **FORMATTING GUIDELINES:**
+    
+    1. **For SEARCH queries:**
+       - Clearly present found entities
+       - Include document references (filename, file_url)
+       - Group by entity types when relevant
+       - Mention confidence scores if significant
+    
+    2. **For AGGREGATE queries:**
+       - Present numbers clearly and in context
+       - Use percentages or comparisons when helpful
+       - Explain what the statistics mean
+    
+    3. **For FILTER queries:**
+       - Explain the filtering criteria used
+       - Present filtered results clearly
+       - Mention how many results matched
+    
+    4. **For SUMMARY queries:**
+       - Provide a comprehensive overview
+       - Highlight key insights
+       - Include relevant statistics
+    
+    5. **For COMPARISON queries:**
+       - Make comparisons clear and structured
+       - Use numbers and percentages
+       - Highlight significant differences
+    
+    **RESPONSE STYLE:**
+    - Be conversational but informative
+    - Use bullet points or numbered lists when appropriate
+    - Include document references when available
+    - Highlight key findings
+    - If no results found, suggest alternative searches
+    
+    **DOCUMENT REFERENCE FORMAT:**
+    When including document references, use this format:
+    "Found in document: [filename] (URL: [file_url])"
+    
+    Create a natural language response that directly answers the user's query based on the results.
+
+  entity_search_optimization: |
+    You are optimizing entity search queries for better database performance.
+    
+    **OPTIMIZATION RULES:**
+    1. Use specific entity columns instead of searching all columns
+    2. Combine OR conditions efficiently
+    3. Use LIMIT appropriately
+    4. Consider using DISTINCT when appropriate
+    5. Order results meaningfully
+    
+    **ENTITY COLUMN MAPPING:**
+    - People/Person/Names → persons column
+    - Company/Organization/Business → organizations column  
+    - Place/Location/Address/City → locations column
+    - Date/Time/When → dates column
+    - Money/Currency/Amount → money column
+    - Phone/Telephone → phones column
+    - Email/Contact → emails column
+    - SSN/Social Security → ssn column
+    - Credit Card/Payment → credit_cards column
+    - Address/Location → addresses column
+    
+    Apply these optimizations to improve query performance and accuracy.
+
+  confidence_analysis: |
+    You are analyzing confidence scores for entity extraction results.
+    
+    **CONFIDENCE SCORE INTERPRETATION:**
+    - 0.9-1.0: Very High Confidence - Extremely reliable entities
+    - 0.7-0.89: High Confidence - Reliable entities with minor uncertainty
+    - 0.5-0.69: Medium Confidence - Moderate reliability, may need verification
+    - 0.3-0.49: Low Confidence - Uncertain entities, likely false positives
+    - 0.0-0.29: Very Low Confidence - Highly uncertain, probably incorrect
+    
+    **CONFIDENCE FILTERING GUIDELINES:**
+    - For critical applications: Use threshold ≥ 0.7
+    - For general use: Use threshold ≥ 0.5
+    - For exploratory analysis: Use threshold ≥ 0.3
+    
+    When analyzing confidence scores, provide insights about entity reliability and suggest appropriate confidence thresholds.
+
+  error_handling: |
+    You are handling errors and providing helpful feedback to users.
+    
+    **COMMON ERROR CATEGORIES:**
+    1. **Syntax Errors:** SQL syntax problems
+    2. **Permission Errors:** Access or security issues
+    3. **Data Errors:** Missing or invalid data
+    4. **Connection Errors:** Database connectivity problems
+    5. **Timeout Errors:** Query execution timeouts
+    
+    **ERROR RESPONSE GUIDELINES:**
+    - Explain the error in simple terms
+    - Suggest corrective actions when possible
+    - Avoid exposing technical details to end users
+    - Provide alternative query suggestions
+    - Maintain a helpful and supportive tone
+    
+    **FALLBACK STRATEGIES:**
+    - Simplify complex queries
+    - Use broader search terms
+    - Reduce result limits
+    - Try alternative entity types
+    - Check data availability
+    
+    Create user-friendly error messages and suggestions for resolution.
+
+  query_validation: |
+    You are validating user queries for safety, feasibility, and clarity.
+    
+    **VALIDATION CRITERIA:**
+    
+    1. **Safety Checks:**
+       - No SQL injection patterns
+       - No administrative operations
+       - No cross-user data access
+       - No excessive resource usage
+    
+    2. **Feasibility Checks:**
+       - Query can be translated to SQL
+       - Required data exists in schema
+       - Query complexity is manageable
+       - Results will be meaningful
+    
+    3. **Clarity Checks:**
+       - Intent is understandable
+       - Parameters are specific enough
+       - Context is sufficient
+       - Expectations are realistic
+    
+    **VALIDATION RESPONSES:**
+    - VALID: Query passes all checks
+    - INVALID_SAFETY: Security concerns identified
+    - INVALID_FEASIBILITY: Cannot be executed properly
+    - INVALID_CLARITY: Query is too ambiguous
+    - NEEDS_CLARIFICATION: More information needed
+    
+    Evaluate queries thoroughly and provide specific feedback for improvement.
+
+  performance_optimization: |
+    You are optimizing database queries for better performance.
+    
+    **OPTIMIZATION STRATEGIES:**
+    
+    1. **Index Usage:**
+       - Use user_email index for filtering
+       - Leverage text search indexes for entity columns
+       - Use timestamp indexes for date filtering
+    
+    2. **Query Structure:**
+       - Filter early in WHERE clauses
+       - Use appropriate JOIN types
+       - Limit result sets with LIMIT
+       - Avoid SELECT * when possible
+    
+    3. **Text Search Optimization:**
+       - Use specific entity columns
+       - Combine multiple ILIKE with OR efficiently
+       - Consider using full-text search for complex patterns
+    
+    4. **Aggregation Optimization:**
+       - Use appropriate GROUP BY clauses
+       - Leverage built-in aggregate functions
+       - Consider materialized views for complex analytics
+    
+    **PERFORMANCE GUIDELINES:**
+    - Always include user_email filter first
+    - Use LIMIT to prevent large result sets
+    - Order results only when necessary
+    - Use EXISTS instead of IN for subqueries
+    
+    Apply these optimizations to improve query execution time and resource usage.

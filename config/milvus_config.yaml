@@ -1,0 +1,121 @@
+# Milvus Vector Store Configuration - YAML
+
+# Milvus Server Connection
+milvus:
+  host: ${MILVUS_HOST:localhost}
+  port: ${MILVUS_PORT:19530}
+  username: ${MILVUS_USERNAME}
+  password: ${MILVUS_PASSWORD}
+
+# Database Configuration
+database:
+  name: ${MILVUS_DATABASE:idp_db}
+
+# Collection Configuration
+collection:
+  name: ${MILVUS_COLLECTION:idp_collection}
+  description: "Vector store collection for session-based OCR embeddings"
+
+# Collection Field Schemas
+field_schemas:
+  - name: id
+    dtype: VARCHAR
+    is_primary: true
+    max_length: 100
+    description: "Unique identifier for each chunk"
+  
+  - name: session_id
+    dtype: VARCHAR
+    max_length: 100
+    description: "Session identifier for document isolation"
+  
+  - name: team_id
+    dtype: VARCHAR
+    max_length: 100
+    description: "Team identifier for multi-tenancy"
+
+  - name: attachment_id
+    dtype: VARCHAR
+    max_length: 100
+    description: "Attachment identifier for archival policy"
+  
+  - name: text
+    dtype: VARCHAR
+    max_length: 65535
+    description: "Text content of the chunk"
+  
+  - name: metadata
+    dtype: JSON
+    description: "JSON metadata for the chunk (filename, chunk_index, etc.)"
+  
+  - name: embedding
+    dtype: FLOAT_VECTOR
+    dim: 768
+    description: "768-dimensional embedding vector"
+  
+  - name: created_at
+    dtype: VARCHAR
+    max_length: 50
+    description: "Timestamp when the chunk was created"
+
+# Embedding Configuration
+embedding:
+  model: ${EMBEDDING_MODEL:gemini-embedding-001}
+  dimension: 768
+  task_type: "SEMANTIC_SIMILARITY"
+  output_dimensionality: 768
+  batch_size: 100
+
+# Text Chunking Configuration
+chunking:
+  chunk_size: 2000
+  chunk_overlap: 400
+  length_function: "len"
+
+# Vector Search Configuration
+vector_search:
+  metric_type: "IP"
+  index_type: "DISKANN"
+  search_params:
+    search_list: 100   # DiskANN query-time candidate beam width (analogous to HNSW ef)
+  index_params:
+    max_degree: 56            # max outgoing edges per graph node (default 56)
+    search_list_size: 100     # build-time candidate list size
+
+# Binary Vector Configuration (if needed)
+binary_vector_search:
+  metric_type: "JACCARD"
+  index_type: "BIN_IVF_FLAT"
+  search_params:
+    nprobe: 10
+  index_params:
+    nlist: 128
+
+# Ingestion Configuration
+ingestion:
+  batch_size: 100
+  generate_ids: true
+  max_chunk_limit: 10000
+
+# API Configuration
+api:
+  default_top_k: 5
+  max_query_limit: 1000
+
+# Logging Configuration
+logging:
+  level: INFO
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: ${MILVUS_LOG_FILE:/tmp/milvus_vectorstore.log}
+  max_file_size: 10485760  # 10MB
+  backup_count: 5
+
+# Performance Configuration
+performance:
+  timeout_seconds: 30
+  retry_attempts: 3
+
+# Feature Flags
+features:
+  enable_error_fallback: true
+  enable_logging: true

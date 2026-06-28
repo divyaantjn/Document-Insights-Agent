@@ -1,0 +1,275 @@
+# OCR Configuration File
+# Configure all prompts, settings, and parameters for the OCR system
+
+ocr:
+  # Image analysis configuration
+  image_analysis:
+    # OCR text extraction prompt
+    ocr_prompt: |
+      You are an expert OCR (Optical Character Recognition) system with exceptional accuracy. Your sole task is to extract ALL text visible in this image with maximum fidelity.
+
+      Follow these extraction rules strictly:
+      - Extract EVERY piece of text visible: headers, body text, captions, labels, watermarks, footnotes, page numbers, dates, and metadata
+      - Preserve the original reading order (left-to-right, top-to-bottom, unless layout clearly dictates otherwise)
+      - Maintain structural formatting: use blank lines to separate paragraphs; preserve bullet/numbered list items as-is
+      - For TABLES: reproduce rows and columns using pipe-separated format (Column A | Column B | Column C)
+      - For HANDWRITTEN text: extract as accurately as possible; mark uncertain characters with [?]
+      - For PARTIALLY OBSCURED or low-quality/blurry text: attempt extraction and mark uncertain portions with [unclear]
+      - Preserve ALL numbers, symbols, special characters, currency signs, and punctuation exactly as they appear
+      - Do NOT interpret, paraphrase, summarize, or add any information not directly visible in the image
+      - Do NOT include any commentary, explanations, or preamble — output only the raw extracted text
+
+      Output ONLY the extracted text content, maintaining its original structure and reading order.
+      {reasoning_section}
+
+    # Comprehensive image understanding prompt
+    understanding_prompt: |
+      You are an expert document analyst and visual content interpreter. Your task is to perform a thorough, structured analysis of this image by carefully examining all visual, textual, and contextual elements.
+
+      Think step-by-step before writing each section. Be precise, objective, and exhaustive — do NOT infer or fabricate information that is not directly visible in the image.
+
+      Provide your analysis using EXACTLY the following structured format:
+
+      1. VISUAL_DESCRIPTION:
+         - Document/Image Type: Identify the specific type (e.g., bar chart, pie chart, line graph, scatter plot, table, photograph, technical diagram, flowchart, screenshot, infographic, form, invoice, report page, map, blueprint)
+         - Layout & Structure: Describe the overall spatial arrangement, orientation (portrait/landscape), and organization of content regions
+         - Visual Elements: List all key visual components present (axes, legends, titles, subtitles, images, icons, color-coding, borders, callouts, annotations)
+         - Quality & Legibility: Note any issues affecting extraction accuracy (blur, low contrast, rotation, noise, compression artifacts, overlapping elements)
+
+      2. KEY_INSIGHTS:
+         - Primary Message: State the single most important takeaway from this image in one sentence
+         - Supporting Findings: List 3–5 concrete observations — trends, comparisons, patterns, relationships, or standout values directly visible
+         - Purpose & Audience: What is the likely purpose of this image and who is the intended audience? (e.g., executive reporting, technical documentation, instructional material, marketing)
+         - Anomalies & Notable Details: Highlight anything unusual, unexpected, emphasized, or particularly significant (e.g., outliers, warnings, highlights, footnotes, disclaimers)
+
+      3. DATA_POINTS:
+         - Extract ALL structured data, metrics, statistics, counts, percentages, dates, and quantitative information visible
+         - Format each entry as: "Label: Value [Unit]" (e.g., "Revenue Q1 2024: $1.2M USD", "Completion Rate: 87.3%", "Date: 2024-03-15")
+         - For TABLES: reproduce data rows using "Column Header: Cell Value" pairs, one row per line
+         - For CHARTS/GRAPHS: extract all axis labels, scale values, data series names, data point values, and legend entries
+         - For FORMS/DOCUMENTS: extract all field names and their filled-in values
+         - If no structured data is present, explicitly state: "No structured data found"
+
+      {reasoning_section}
+    
+    # Context window size (characters) for document context inclusion
+    context_window: 300
+    
+    # Maximum context length (characters) to include in prompt
+    max_context_length: 200
+
+    min_image_width: 150          # Minimum width in pixels
+    min_image_height: 150        # Minimum height in pixels
+    min_image_file_size: 10000     # Minimum file size in bytes (5KB)
+    max_aspect_ratio: 10          # Maximum aspect ratio to filter thin lines/borders
+  
+  # Document extraction settings
+  document_extraction:
+    # DOCX extraction context window
+    docx_context_window: 500
+    
+    # PPT extraction context window
+    ppt_context_window: 300
+    
+    # PDF extraction context window
+    pdf_context_window: 300
+  
+  # Output formatting
+  output_formatting:
+    # Section headers for analysis output
+    text_header: "Text Content"
+    visual_description_header: "Visual Description"
+    key_insights_header: "Key Insights"
+    data_points_header: "Data Points"
+    
+    # Image analysis section header format
+    image_analysis_header_format: "Image Content Analysis - {image_name}"
+    
+    # Page reference format for PDFs
+    pdf_image_reference_format: "Page {page_num}, Image {img_num}"
+    
+    # Slide reference format for PowerPoint
+    ppt_image_reference_format: "{shape_name} on Slide {slide_num}"
+    
+    # DOCX reference format
+    docx_image_reference_format: "{filename}"
+  
+  # Error messages
+  error_messages:
+    docx_no_content: "DOCX contains no extractable content"
+    ppt_no_content: "PPT contains no extractable content"
+    pdf_no_content: "PDF contains no extractable content"
+    excel_no_content: "Excel does not contain data"
+    zip_invalid: "Invalid zip file"
+    image_extraction_failed: "Image extraction failed"
+    no_images_analyzed: "No meaningful analysis from any images"
+    no_content_extracted: "No content extracted from image"
+    unsupported_file_type: "Unsupported file type: .{file_ext}"
+    image_analysis_failed: "Image {idx} analysis failed"
+  
+  # Success messages
+  success_messages:
+    docx_extracted: "Successfully extracted text from DOCX file"
+    ppt_extracted: "Successfully extracted text from PowerPoint file"
+    pdf_extracted: "Successfully extracted text from PDF file"
+    excel_extracted: "Successfully extracted text from Excel file: {filename}"
+    text_file_decoded: "Successfully decoded text using {encoding}"
+    image_analysis_completed: "Comprehensive image analysis completed"
+    images_analyzed: "Successfully analyzed {successful}/{total} images"
+    images_integrated: "Successfully integrated text from {successful}/{total} images"
+    zip_extracted: "Successfully extracted text from {count} files in zip archive"
+  
+  # Info messages
+  info_messages:
+    processing_images: "Processing {count} images for comprehensive understanding"
+    nested_zip: "Processing nested zip: {filename}"
+    image_extraction: "Extracted image {num}/{total} from {source}"
+    pdf_extraction: "Extracting page {page_num}/{total_pages}"
+  
+  # Warning messages
+  warning_messages:
+    image_extraction_failed: "Failed to extract image {idx}: {error}"
+    no_images_from_analysis: "No meaningful analysis from any images"
+    unsupported_file: "Unsupported file type: {filename}"
+    sheet_read_failed: "Failed to read sheet '{sheet_name}': {error}"
+  
+  # Logging configuration
+  logging:
+    # Log levels: DEBUG, INFO, WARNING, ERROR
+    level: "INFO"
+    # Print detailed analysis results
+    print_analysis_results: true
+    # Print timing information
+    print_timing: false
+  
+  # Processing configuration
+  processing:
+    # Maximum concurrent image analysis tasks
+    max_concurrent_images: 5
+    
+    # Timeout for image analysis (seconds)
+    image_analysis_timeout: 60
+    
+    # Retry attempts for failed image analysis
+    image_analysis_retries: 1
+    
+    # Context inclusion strategy: "always", "never", "smart"
+    # smart: only include context if document size is reasonable
+    context_strategy: "smart"
+    
+    # Maximum document context to include (characters)
+    max_document_context: 200
+  
+  # Text extraction settings
+  text_extraction:
+    # Supported text file extensions
+    supported_extensions:
+      - "txt"
+      - "md"
+      - "csv"
+      - "json"
+      - "xml"
+      - "html"
+      - "py"
+      - "js"
+      - "java"
+      - "cpp"
+      - "c"
+      - "h"
+    
+    # Supported image extensions
+    image_extensions:
+      - "png"
+      - "jpg"
+      - "jpeg"
+      - "gif"
+      - "bmp"
+      - "tiff"
+      - "webp"
+    
+    # Character encodings to try (in order)
+    encodings:
+      - "utf-8"
+      - "utf-16"
+      - "ascii"
+      - "latin-1"
+      - "iso-8859-1"
+      - "cp1252"
+    
+    # Fallback encoding strategy
+    fallback_encoding: "utf-8"
+    fallback_encoding_errors: "replace"
+  
+  # Analysis result parsing
+  result_parsing:
+    # Keywords to identify section headers in LLM response
+    visual_description_keywords:
+      - "visual_description"
+      - "visual description"
+      - "image type"
+    
+    key_insights_keywords:
+      - "key_insights"
+      - "key insights"
+      - "key_insight"
+      - "main messages"
+      - "findings"
+    
+    data_points_keywords:
+      - "data_points"
+      - "data points"
+      - "data_point"
+      - "metrics"
+      - "numbers"
+  
+  # PDF processing (PyMuPDF)
+  pdf_processing:
+    # Image conversion format
+    image_format: "png"
+    
+    # Color space handling
+    handle_cmyk: true  # Convert CMYK to RGB
+    
+    # Memory cleanup after image extraction
+    free_memory: true
+  
+  # Text chunking configuration
+  chunking:
+    chunk_size: 2000
+    chunk_overlap: 400
+    table_rows_per_chunk: 20
+    semantic_chunking_timeout: 15
+    # Raised from 10 → 20: PDF semantic chunking dispatches many concurrent
+    # Gemini embed calls; doubling concurrency halves wall-clock time on
+    # large PDFs without exceeding Gemini rate limits at 30-text batch size.
+    max_concurrent_text_chunks: 20
+    pdf_page_batch_size: 10
+    # Semantic chunking settings (text elements only; tables/images are unaffected)
+    semantic_chunking:
+      enabled: true
+      batch_size: 70               # Number of sentences embedded per API call
+      percentile_threshold: 25     # Breakpoint sensitivity; lower = more/finer chunks
+      max_chunk_size: 2000         # Hard character cap per semantic chunk
+      min_chunk_size: 100          # Drop chunks below this character length
+      embedding_model: "gemini-embedding-001"
+      output_dimensionality: 768
+      task_type: "SEMANTIC_SIMILARITY"
+    # Streaming page-batch size for large PDF/DOCX processing (memory optimisation)
+    pdf_page_batch_size: 10
+
+  # File processing limits
+  limits:
+    # Maximum file size for processing (bytes)
+    max_file_size: 104857600  # 100 MB
+
+    # Maximum images per document
+    max_images_per_document: 100
+
+    # Maximum nested zip depth
+    max_zip_depth: 5
+
+    # Maximum sheets in Excel file
+    max_excel_sheets: 1000
+
+  pdf_processing:
+    max_pages: 500
